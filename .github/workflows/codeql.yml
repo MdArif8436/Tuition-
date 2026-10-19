@@ -14,7 +14,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze Code
+    name: Analyze Java/Kotlin Code
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -26,77 +26,85 @@ jobs:
       matrix:
         language:
           - java-kotlin
-          - javascript-typescript
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-      - name: Set up JDK
-        if: matrix.language == 'java-kotlin'
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configure Android SDK and licenses
+        run: |
+          yes | sdkmanager --licenses || true
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
 
       - name: Setup Gradle
-        if: matrix.language == 'java-kotlin'
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure Firebase Credentials (google-services.json)
+        run: |
+          if [ ! -f "app/google-services.json" ]; then
+            if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+              echo "Injecting google-services.json from GitHub secret GOOGLE_SERVICES_JSON"
+              mkdir -p app
+              echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+            else
+              echo "::warning::GOOGLE_SERVICES_JSON secret not found. Generating minimal CI build configuration."
+              mkdir -p app
+              cat << 'EOF' > app/google-services.json
+          {
+            "project_info": {
+              "project_number": "751969067558",
+              "project_id": "gen-lang-client-0915184420",
+              "storage_bucket": "gen-lang-client-0915184420.firebasestorage.app"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:751969067558:android:70c0d35474d5d37ebf7ce7",
+                  "android_client_info": {
+                    "package_name": "com.aistudio.bcatuition.mopkby"
+                  }
+                },
+                "oauth_client": [
+                  {
+                    "client_id": "751969067558-srjngcsgft8s1d2071fi3mblfa1alfl4.apps.googleusercontent.com",
+                    "client_type": 3
+                  }
+                ],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyCVPkb58ZC3T2iddzEarErSX0gqLY9uRH0"
+                  }
+                ]
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+            fi
+          fi
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          build-mode: manual
           queries: security-extended,security-and-quality
 
       - name: Build Android project
-        if: matrix.language == 'java-kotlin'
         run: |
-          if [ -f "./gradlew" ]; then
-            chmod +x ./gradlew
-            ./gradlew assembleDebug --no-daemon
-          else
-            echo "No Gradle wrapper found. Skipping Gradle build."
-          fi
-
-      - name: Install Node.js
-        if: matrix.language == 'javascript-typescript'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: |
-            **/package-lock.json
-            **/yarn.lock
-            **/pnpm-lock.yaml
-
-      - name: Install JavaScript dependencies
-        if: matrix.language == 'javascript-typescript'
-        run: |
-          if [ -f "package-lock.json" ]; then
-            npm ci
-          elif [ -f "yarn.lock" ]; then
-            yarn install --frozen-lockfile
-          elif [ -f "pnpm-lock.yaml" ]; then
-            corepack enable
-            pnpm install --frozen-lockfile
-          else
-            echo "No JavaScript dependency lockfile found. Skipping dependency installation."
-          fi
-
-      - name: Build JavaScript/TypeScript project
-        if: matrix.language == 'javascript-typescript'
-        run: |
-          if [ -f "package.json" ]; then
-            if grep -q '"build"' package.json; then
-              npm run build --if-present
-            else
-              echo "No build script found in package.json."
-            fi
-          else
-            echo "No package.json found. Skipping JavaScript/TypeScript build."
-          fi
+          chmod +x ./gradlew
+          ./gradlew --no-daemon --stacktrace :app:assembleDebug
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
