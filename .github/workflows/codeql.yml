@@ -14,7 +14,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze C/C++ Code
+    name: Analyze Code
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -25,65 +25,77 @@ jobs:
       fail-fast: false
       matrix:
         language:
-          - c-cpp
+          - java-kotlin
+          - javascript-typescript
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            gcc \
-            g++ \
-            make \
-            cmake \
-            ninja-build \
-            pkg-config
+      - name: Set up JDK
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Setup Gradle
+        if: matrix.language == 'java-kotlin'
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          build-mode: manual
           queries: security-extended,security-and-quality
 
-      - name: Configure and build project
+      - name: Build Android project
+        if: matrix.language == 'java-kotlin'
         run: |
-          # Detect build system and execute the proper build commands
-          if [ -f "CMakeLists.txt" ]; then
-            echo "Building with CMake..."
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-            cmake --build build --parallel $(nproc)
-          elif [ -f "Makefile" ] || [ -f "makefile" ] || [ -f "GNUmakefile" ]; then
-            echo "Building with Make..."
-            make clean || true
-            make -j$(nproc)
-          elif [ -f "configure.ac" ] || [ -f "configure.in" ] || [ -f "configure" ]; then
-            echo "Building with Autotools..."
-            if [ -f "./autogen.sh" ]; then
-              ./autogen.sh
-            elif [ -f "./bootstrap" ]; then
-              ./bootstrap
-            fi
-            ./configure
-            make -j$(nproc)
-          elif [ -f "meson.build" ]; then
-            echo "Building with Meson..."
-            meson setup build --buildtype=release
-            meson compile -C build
-          elif [ -f "build.sh" ]; then
-            echo "Building with custom build script..."
-            chmod +x ./build.sh
-            ./build.sh
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --no-daemon
           else
-            echo "Compiling all C source files..."
-            mkdir -p build
-            find . -maxdepth 3 -name "*.c" | grep -v "/build/" | grep -v "/test" | xargs -r gcc -O2 -o build/main || true
+            echo "No Gradle wrapper found. Skipping Gradle build."
+          fi
+
+      - name: Install Node.js
+        if: matrix.language == 'javascript-typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            **/package-lock.json
+            **/yarn.lock
+            **/pnpm-lock.yaml
+
+      - name: Install JavaScript dependencies
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          elif [ -f "yarn.lock" ]; then
+            yarn install --frozen-lockfile
+          elif [ -f "pnpm-lock.yaml" ]; then
+            corepack enable
+            pnpm install --frozen-lockfile
+          else
+            echo "No JavaScript dependency lockfile found. Skipping dependency installation."
+          fi
+
+      - name: Build JavaScript/TypeScript project
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          if [ -f "package.json" ]; then
+            if grep -q '"build"' package.json; then
+              npm run build --if-present
+            else
+              echo "No build script found in package.json."
+            fi
+          else
+            echo "No package.json found. Skipping JavaScript/TypeScript build."
           fi
 
       - name: Perform CodeQL Analysis
