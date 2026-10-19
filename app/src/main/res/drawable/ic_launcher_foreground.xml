@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Graduation Mortarboard Cap -->
+    <path
+        android:fillColor="#60A5FA"
+        android:pathData="M54,28L26,42L54,56L82,42Z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M38,48L38,62C38,68 45,73 54,73C63,73 70,68 70,62L70,48L54,56Z" />
+    <!-- Tassel -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M78,44L82,44L82,58C81,61 79,62 77,62L75,62L75,58L78,58Z" />
+
+    <!-- Open book / laptop base below cap -->
+    <path
+        android:fillColor="#F8FAFC"
+        android:pathData="M32,76L52,73L52,82L32,85Z" />
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M56,73L76,76L76,85L56,82Z" />
+
+    <!-- Code bracket glyphs < / > inside cap / base -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,58L44,62L48,66L46.5,67.5L41,62L46.5,56.5Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,58L64,62L60,66L61.5,67.5L67,62L61.5,56.5Z" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M55.5,56L51,68L53,68L57.5,56Z" />
+</vector>

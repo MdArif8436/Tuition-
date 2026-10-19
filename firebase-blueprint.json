@@ -1,0 +1,216 @@
+{
+  "entities": {
+    "users": {
+      "path": "/users/{userId}",
+      "fields": {
+        "uid": "string",
+        "email": "string",
+        "fullName": "string",
+        "photoUrl": "string",
+        "role": "string",
+        "rollNumber": "string",
+        "className": "string",
+        "batch": "string",
+        "mobileNumber": "string",
+        "subjects": "array",
+        "registrationComplete": "boolean",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp"
+      }
+    },
+    "students": {
+      "path": "/students/{studentId}",
+      "fields": {
+        "studentId": "string",
+        "name": "string",
+        "rollNumber": "string",
+        "batch": "string",
+        "parentIds": "array",
+        "email": "string",
+        "phone": "string"
+      }
+    },
+    "parents": {
+      "path": "/parents/{parentId}",
+      "fields": {
+        "parentId": "string",
+        "name": "string",
+        "mobile": "string",
+        "linkedStudentIds": "array",
+        "relationship": "string"
+      }
+    },
+    "hods": {
+      "path": "/hods/{hodId}",
+      "fields": {
+        "hodId": "string",
+        "name": "string",
+        "designation": "string",
+        "mobile": "string",
+        "batches": "array",
+        "subjects": "array"
+      }
+    },
+    "attendance": {
+      "path": "/attendance/{attendanceId}",
+      "fields": {
+        "studentId": "string",
+        "studentName": "string",
+        "enrollmentNo": "string",
+        "batchId": "string",
+        "subject": "string",
+        "date": "string",
+        "status": "string",
+        "remarks": "string",
+        "createdAt": "timestamp"
+      }
+    },
+    "fees": {
+      "path": "/fees/{feeId}",
+      "fields": {
+        "studentId": "string",
+        "studentName": "string",
+        "feeMonth": "string",
+        "totalAmount": "number",
+        "paidAmount": "number",
+        "dueDate": "string",
+        "status": "string",
+        "createdAt": "timestamp"
+      }
+    },
+    "payments": {
+      "path": "/payments/{paymentId}",
+      "fields": {
+        "studentId": "string",
+        "amount": "number",
+        "method": "string",
+        "status": "string",
+        "transactionId": "string",
+        "paidAt": "timestamp"
+      }
+    },
+    "marks": {
+      "path": "/marks/{markId}",
+      "fields": {
+        "studentId": "string",
+        "subject": "string",
+        "testName": "string",
+        "maxMarks": "number",
+        "obtainedMarks": "number",
+        "semester": "number",
+        "date": "string"
+      }
+    },
+    "assignments": {
+      "path": "/assignments/{assignmentId}",
+      "fields": {
+        "title": "string",
+        "subject": "string",
+        "batchId": "string",
+        "description": "string",
+        "dueDate": "string",
+        "maxMarks": "number"
+      }
+    },
+    "submissions": {
+      "path": "/submissions/{submissionId}",
+      "fields": {
+        "assignmentId": "string",
+        "studentId": "string",
+        "studentName": "string",
+        "submissionText": "string",
+        "status": "string",
+        "obtainedMarks": "number",
+        "teacherFeedback": "string",
+        "submittedAt": "timestamp"
+      }
+    },
+    "dailyUpdates": {
+      "path": "/dailyUpdates/{updateId}",
+      "fields": {
+        "title": "string",
+        "content": "string",
+        "batchId": "string",
+        "subject": "string",
+        "authorName": "string",
+        "date": "string"
+      }
+    },
+    "announcements": {
+      "path": "/announcements/{announcementId}",
+      "fields": {
+        "title": "string",
+        "content": "string",
+        "priority": "string",
+        "targetRole": "string",
+        "postedAt": "timestamp"
+      }
+    },
+    "calendarEvents": {
+      "path": "/calendarEvents/{eventId}",
+      "fields": {
+        "title": "string",
+        "date": "string",
+        "time": "string",
+        "type": "string",
+        "description": "string"
+      }
+    },
+    "topics": {
+      "path": "/topics/{topicId}",
+      "fields": {
+        "subject": "string",
+        "title": "string",
+        "unit": "string",
+        "status": "string"
+      }
+    },
+    "quizzes": {
+      "path": "/quizzes/{quizId}",
+      "fields": {
+        "title": "string",
+        "subject": "string",
+        "totalQuestions": "number",
+        "durationMinutes": "number"
+      }
+    },
+    "quizAttempts": {
+      "path": "/quizAttempts/{attemptId}",
+      "fields": {
+        "quizId": "string",
+        "studentId": "string",
+        "score": "number",
+        "maxScore": "number",
+        "completedAt": "timestamp"
+      }
+    },
+    "forumPosts": {
+      "path": "/forumPosts/{postId}",
+      "fields": {
+        "title": "string",
+        "content": "string",
+        "authorId": "string",
+        "authorName": "string",
+        "tags": "array",
+        "createdAt": "timestamp"
+      }
+    },
+    "forumReplies": {
+      "path": "/forumReplies/{replyId}",
+      "fields": {
+        "postId": "string",
+        "content": "string",
+        "authorId": "string",
+        "createdAt": "timestamp"
+      }
+    },
+    "appSettings": {
+      "path": "/appSettings/{settingId}",
+      "fields": {
+        "academicYear": "string",
+        "currentSemester": "number",
+        "instituteName": "string"
+      }
+    }
+  }
+}

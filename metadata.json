@@ -1,0 +1,8 @@
+{
+  "name": "BCA Tuition Portal",
+  "description": "Comprehensive LMS and tuition management portal for BCA students following MAKAUT syllabus: tracking attendance, payments, syllabus topics, quizzes, marks analytics, and schedules.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

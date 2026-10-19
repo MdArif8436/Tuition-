@@ -1,0 +1,195 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isHod() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'hod' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    function isParentOf(studentId) {
+      return isAuthenticated() && (
+        request.auth.uid in get(/databases/$(database)/documents/students/$(studentId)).data.parentIds ||
+        studentId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentIds
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isHod();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isHod();
+      allow delete: if isHod();
+    }
+
+    match /students/{studentId} {
+      allow read: if isHod() ||
+        isOwner(studentId) ||
+        isParentOf(studentId);
+      allow create, update: if isHod() || isOwner(studentId);
+      allow delete: if isHod();
+    }
+
+    match /parents/{parentId} {
+      allow read: if isOwner(parentId) || isHod();
+      allow create, update: if isOwner(parentId);
+      allow delete: if isHod();
+    }
+
+    match /hods/{hodId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /roll_numbers/{rollNumber} {
+      allow read, create: if isAuthenticated();
+      allow update, delete: if isHod();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isHod() ||
+        request.auth.uid == resource.data.studentId ||
+        isParentOf(resource.data.studentId);
+      allow create, update, delete: if isHod();
+    }
+
+    match /feeRecords/{feeId} {
+      allow read: if isHod() ||
+        request.auth.uid == resource.data.studentId ||
+        isParentOf(resource.data.studentId);
+      allow write: if isHod();
+    }
+
+    match /fees/{feeId} {
+      allow read: if isHod() ||
+        request.auth.uid == resource.data.studentId ||
+        isParentOf(resource.data.studentId);
+      allow write: if isHod();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isHod() ||
+        request.auth.uid == resource.data.studentId ||
+        isParentOf(resource.data.studentId);
+      allow create: if isAuthenticated();
+      allow update, delete: if isHod();
+    }
+
+    match /marks/{markId} {
+      allow read: if isHod() ||
+        request.auth.uid == resource.data.studentId ||
+        isParentOf(resource.data.studentId);
+      allow write: if isHod();
+    }
+
+    match /testMarks/{markId} {
+      allow read: if isHod() ||
+        request.auth.uid == resource.data.studentId ||
+        isParentOf(resource.data.studentId);
+      allow write: if isHod();
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /submissions/{submissionId} {
+      allow read: if isHod() ||
+        request.auth.uid == resource.data.studentId;
+      allow create, update: if request.auth.uid == resource.data.studentId;
+      allow delete: if isHod();
+    }
+
+    match /dailyUpdates/{updateId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /calendarEvents/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /topics/{topicId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /quizAttempts/{attemptId} {
+      allow read: if isHod() || request.auth.uid == resource.data.studentId;
+      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      allow update, delete: if isHod();
+    }
+
+    match /doubts/{doubtId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isHod() || request.auth.uid == resource.data.senderId;
+    }
+
+    match /forumPosts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isHod() || request.auth.uid == resource.data.authorId;
+      allow delete: if isHod() || request.auth.uid == resource.data.authorId;
+    }
+
+    match /forumReplies/{replyId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isHod() || request.auth.uid == resource.data.authorId;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.role == 'ALL' ||
+        isHod()
+      );
+      allow create: if isHod();
+      allow update, delete: if isHod();
+    }
+
+    match /feedback/{feedbackId} {
+      allow read: if isHod() || request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated();
+      allow update, delete: if isHod();
+    }
+
+    match /referrals/{referralId} {
+      allow read: if isHod() || request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated();
+      allow update, delete: if isHod();
+    }
+
+    match /appSettings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isHod();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
