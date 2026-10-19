@@ -1,0 +1,92 @@
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  analyze:
+    name: Analyze C/C++ Code
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - c-cpp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            gcc \
+            g++ \
+            make \
+            cmake \
+            ninja-build \
+            pkg-config
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: manual
+          queries: security-extended,security-and-quality
+
+      - name: Configure and build project
+        run: |
+          # Detect build system and execute the proper build commands
+          if [ -f "CMakeLists.txt" ]; then
+            echo "Building with CMake..."
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+            cmake --build build --parallel $(nproc)
+          elif [ -f "Makefile" ] || [ -f "makefile" ] || [ -f "GNUmakefile" ]; then
+            echo "Building with Make..."
+            make clean || true
+            make -j$(nproc)
+          elif [ -f "configure.ac" ] || [ -f "configure.in" ] || [ -f "configure" ]; then
+            echo "Building with Autotools..."
+            if [ -f "./autogen.sh" ]; then
+              ./autogen.sh
+            elif [ -f "./bootstrap" ]; then
+              ./bootstrap
+            fi
+            ./configure
+            make -j$(nproc)
+          elif [ -f "meson.build" ]; then
+            echo "Building with Meson..."
+            meson setup build --buildtype=release
+            meson compile -C build
+          elif [ -f "build.sh" ]; then
+            echo "Building with custom build script..."
+            chmod +x ./build.sh
+            ./build.sh
+          else
+            echo "Compiling all C source files..."
+            mkdir -p build
+            find . -maxdepth 3 -name "*.c" | grep -v "/build/" | grep -v "/test" | xargs -r gcc -O2 -o build/main || true
+          fi
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
